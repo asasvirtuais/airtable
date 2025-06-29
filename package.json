@@ -1,0 +1,46 @@
+{
+  "name": "@asasvirtuais/airtable",
+  "version": "3.0.3",
+  "type": "module",
+  "description": "TypeScript SDK for Airtable Web API with full type safety and rate limiting",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asasvirtuais/airtable.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "scripts": {},
+  "keywords": [
+    "airtable",
+    "api",
+    "typescript",
+    "sdk",
+    "database"
+  ],
+  "author": "Ícaro Carniello Capobianco",
+  "license": "MIT",
+  "homepage": "https://github.com/asasvirtuais/airtable#readme",
+  "bugs": {
+    "url": "https://github.com/asasvirtuais/airtable/issues"
+  },
+  "dependencies": {
+    "wretch": "^2.11.0"
+  },
+  "devDependencies": {
+    "@asasvirtuais/crud": "workspace:*",
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
