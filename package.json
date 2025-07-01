@@ -40,7 +40,7 @@
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "@asasvirtuais/crud": "github:asasvirtuais/crud#main"
+    "@asasvirtuais/crud": "workspace:*"
   },
   "engines": {
     "node": ">=16"
