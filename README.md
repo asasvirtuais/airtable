@@ -1,13 +1,6 @@
 # @asasvirtuais/airtable
 
-TypeScript SDK for Airtable Web API with full type safety and rate limiting.
-
-## Features
-
-- 🔒 **Full Type Safety** - Complete TypeScript definitions for all Airtable field types
-- ⚡ **Rate Limiting** - Built-in rate limiting (5 requests/second) to respect Airtable's limits
-- 🏗️ **Clean API** - Intuitive method chaining for easy use
-- 📦 **Lightweight** - Only depends on `wretch` for HTTP requests
+TypeScript-first Airtable SDK with rate limiting and CRUD interface implementation.
 
 ## Installation
 
@@ -15,156 +8,265 @@ TypeScript SDK for Airtable Web API with full type safety and rate limiting.
 npm install @asasvirtuais/airtable
 ```
 
-## Usage
+## Features
+
+- 🎯 **Type-safe**: Full TypeScript support with generics
+- ⚡ **Rate Limiting**: Built-in rate limiter (5 requests/second)
+- 🔍 **Advanced Queries**: MongoDB-style query syntax
+- 🏗️ **CRUD Interface**: Implements `@asasvirtuais/crud` interface
+- 📊 **Schema Support**: Fetch and manage table schemas
+- 🔄 **Batch Operations**: Efficient bulk operations
+
+## Quick Start
 
 ```typescript
 import airtable from '@asasvirtuais/airtable'
 
-// Initialize with your API token
-const client = airtable(process.env.AIRTABLE_TOKEN)
+// Initialize client
+const client = airtable({
+  token: process.env.AIRTABLE_TOKEN!
+})
 
-// Get base schema
-const schema = await client.base('appXXXXXXXXXXXXXX').schema()
+// Work with a specific base
+const base = client.base('appXXXXXXXXXXXXXX')
 
-// Work with typed records
-interface UserRecord {
+// Get CRUD interface
+const crud = base.crud()
+
+// Use CRUD operations
+const user = await crud.create({
+  table: 'Users',
+  data: { name: 'John Doe', email: 'john@example.com' }
+})
+```
+
+## CRUD Operations
+
+### Create
+
+```typescript
+const newRecord = await crud.create({
+  table: 'Users',
+  data: {
+    name: 'Jane Smith',
+    email: 'jane@example.com',
+    active: true
+  }
+})
+```
+
+### Find
+
+```typescript
+const record = await crud.find({
+  table: 'Users',
+  id: 'recXXXXXXXXXXXXXX'
+})
+```
+
+### Update
+
+```typescript
+const updated = await crud.update({
+  table: 'Users',
+  id: 'recXXXXXXXXXXXXXX',
+  data: { active: false }
+})
+```
+
+### Remove
+
+```typescript
+const deleted = await crud.remove({
+  table: 'Users',
+  id: 'recXXXXXXXXXXXXXX'
+})
+```
+
+### List with Queries
+
+```typescript
+// Basic filtering
+const activeUsers = await crud.list({
+  table: 'Users',
+  query: { active: true }
+})
+
+// Advanced queries
+const results = await crud.list({
+  table: 'Users',
+  query: {
+    age: { $gte: 18, $lt: 65 },
+    status: { $in: ['active', 'pending'] },
+    $or: [
+      { role: 'admin' },
+      { permissions: { $in: ['write'] } }
+    ],
+    $sort: { createdAt: -1 },
+    $limit: 50,
+    $skip: 100
+  }
+})
+```
+
+## Query Operators
+
+### Comparison Operators
+
+- `$eq` - Equal (default when using direct value)
+- `$ne` - Not equal
+- `$gt` - Greater than
+- `$gte` - Greater than or equal
+- `$lt` - Less than
+- `$lte` - Less than or equal
+
+### Array Operators
+
+- `$in` - Value is in array
+- `$nin` - Value is not in array
+
+### Logical Operators
+
+- `$or` - Match any condition
+- `$and` - Match all conditions
+
+### Query Modifiers
+
+- `$limit` - Limit number of results
+- `$skip` - Skip records (pagination)
+- `$sort` - Sort results
+- `$select` - Select specific fields
+
+## Direct API Access
+
+For more control, use the direct API methods:
+
+```typescript
+const base = client.base('appXXXXXXXXXXXXXX')
+
+// Get all tables
+const tables = await base.tables()
+
+// Work with a specific table
+const table = base.table('Users')
+
+// List records with Airtable-specific options
+const { records, offset } = await table.list({
+  filterByFormula: "AND({active}, {age} > 18)",
+  maxRecords: 100,
+  pageSize: 50,
+  sort: [{ field: 'createdAt', direction: 'desc' }],
+  view: 'Grid view'
+})
+
+// Get a single record
+const record = await table.get('recXXXXXXXXXXXXXX')
+
+// Create record
+const created = await table.create({
+  fields: { name: 'New User', email: 'new@example.com' }
+})
+
+// Update record
+const updated = await table.update('recXXXXXXXXXXXXXX', {
+  fields: { name: 'Updated Name' }
+})
+
+// Delete record
+await table.delete('recXXXXXXXXXXXXXX')
+```
+
+## Schema Management
+
+```typescript
+// Get table schema
+const schema = await base.table('Users').schema()
+
+console.log(schema.fields)
+// [
+//   { id: 'fldXXXX', name: 'Name', type: 'singleLineText' },
+//   { id: 'fldYYYY', name: 'Email', type: 'email' },
+//   { id: 'fldZZZZ', name: 'Active', type: 'checkbox' }
+// ]
+```
+
+## Rate Limiting
+
+The SDK includes automatic rate limiting (5 requests per second):
+
+```typescript
+// These requests will be automatically throttled
+await Promise.all([
+  crud.list({ table: 'Users' }),
+  crud.list({ table: 'Orders' }),
+  crud.list({ table: 'Products' }),
+  // ... more requests
+])
+```
+
+## Type Safety
+
+Define your types for full type safety:
+
+```typescript
+interface User {
   id: string
   name: string
   email: string
   active: boolean
+  createdAt: string
 }
 
-const users = client.base('appXXXXXXXXXXXXXX').table<UserRecord, Omit<UserRecord, 'id'>>('Users')
+// Type-safe CRUD operations
+const crud = base.crud<User, Omit<User, 'id' | 'createdAt'>>()
 
-// List all records
-const allUsers = await users.records.list()
-
-// Find a specific record
-const user = await users.records.find('recXXXXXXXXXXXXXX')
-
-// Create a new record
-const newUser = await users.records.create({
-  name: 'John Doe',
-  email: 'john@example.com',
-  active: true
+// TypeScript knows the shape of data
+const users = await crud.list({
+  table: 'Users',
+  query: { active: true } // TypeScript validates this
 })
-
-// Update a record
-const updatedUser = await users.records.update('recXXXXXXXXXXXXXX', {
-  active: false
-})
-
-// Delete a record
-await users.records.remove('recXXXXXXXXXXXXXX')
 ```
 
-## API Reference
+## Integration with React
 
-### Client
+Works seamlessly with `@asasvirtuais/react`:
 
-#### `airtable(token: string)`
+```typescript
+import { database } from '@asasvirtuais/crud/react'
+import airtable from '@asasvirtuais/airtable'
 
-Creates a new Airtable client instance.
+const crud = airtable({ token }).base(baseId).crud()
+const db = database(schema, crud)
 
-### Base Methods
-
-#### `client.base(baseId: string)`
-
-Returns a base instance for the given base ID.
-
-#### `base.schema()`
-
-Returns the complete schema for the base including all tables and fields.
-
-### Table Methods
-
-#### `base.table<Readable, Writeable>(nameOrId: string)`
-
-Returns a table instance with typed methods. The generic types define:
-- `Readable`: The shape of records when reading (includes `id` field)
-- `Writeable`: The shape of data when writing (excludes read-only fields)
-
-### Record Operations
-
-#### `table.records.list(query?: Record<string, any>)`
-
-List records with optional query parameters (filtering, sorting, etc.).
-
-#### `table.records.find(recordId: string)`
-
-Retrieve a single record by ID.
-
-#### `table.records.create(fields: Writeable)`
-
-Create a new record.
-
-#### `table.records.update(recordId: string, fields: Partial<Writeable>)`
-
-Update an existing record.
-
-#### `table.records.remove(recordId: string)`
-
-Delete a record.
-
-### Field Operations
-
-#### `table.fields.create(field: Omit<FieldDefinition, 'id'>)`
-
-Create a new field in the table.
-
-#### `table.fields.update(fieldId: string, patch: Partial<FieldDefinition>)`
-
-Update an existing field.
-
-## Rate Limiting
-
-The SDK automatically handles Airtable's rate limits by limiting requests to 5 per second. If you exceed this limit, requests will be queued and sent when possible.
+function UserList() {
+  const { array: users } = db.useTable('users')
+  // ... render users
+}
+```
 
 ## Error Handling
 
 ```typescript
 try {
-  const record = await users.records.find('invalidId')
+  const record = await crud.find({
+    table: 'Users',
+    id: 'invalid-id'
+  })
 } catch (error) {
-  console.error('Failed to fetch record:', error)
+  if (error.message.includes('NOT_FOUND')) {
+    console.log('Record not found')
+  }
 }
 ```
 
-## Type Safety
+## Environment Setup
 
-The SDK includes comprehensive TypeScript definitions for all Airtable field types:
-
-- Single line text
-- Long text
-- Attachments
-- Checkboxes
-- Multiple select
-- Single select
-- Date
-- Phone number
-- Email
-- URL
-- Number
-- Currency
-- Percent
-- Duration
-- Rating
-- Formula
-- Rollup
-- Count
-- Lookup
-- Created time
-- Last modified time
-- Created by
-- Last modified by
-- Auto number
-- Barcode
-- Button
+```bash
+# .env
+AIRTABLE_TOKEN=patXXXXXXXXXXXXXX
+AIRTABLE_BASE_ID=appXXXXXXXXXXXXXX
+```
 
 ## License
 
 MIT
-
-## Repository
-
-https://github.com/asasvirtuais/airtable
