@@ -2,6 +2,7 @@
   "name": "@asasvirtuais/airtable",
   "version": "3.0.3",
   "type": "module",
+  "main": "./src/main.ts",
   "description": "TypeScript SDK for Airtable Web API with full type safety and rate limiting",
   "exports": {
     ".": "./src/index.ts",
